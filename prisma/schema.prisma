@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                          String    @id @default(uuid())
+  name                        String
+  email                       String    @unique
+  passwordHash                String
+  avatar                      String?
+  isVerified                  Boolean   @default(false)
+  verificationTokenHash       String?
+  verificationTokenExpiresAt  DateTime?
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
+
+  sessions                    Session[]
+
+  @@map("users")
+}
+
+// One row per login. "Single active device" is enforced in application code
+// (auth.service) by deactivating any other active session for the user
+// whenever a new one is created; Redis mirrors the active session for fast
+// per-request lookups so we don't hit Postgres on every authenticated request.
+model Session {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokenHash String
+  deviceInfo       String
+  ipAddress        String?
+  isActive         Boolean  @default(true)
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+  lastUsedAt       DateTime @default(now())
+
+  @@index([userId])
+  @@map("sessions")
+}
