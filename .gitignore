@@ -4,6 +4,7 @@ dist/
 .env.*.local
 uploads/*
 !uploads/.gitkeep
+!uploads/avatars/.gitkeep
 *.log
 .DS_Store
 src/generated/
